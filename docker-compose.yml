@@ -1,0 +1,7 @@
+version: '3.7'
+
+services:
+  feed:
+    image: registry.gitlab.com/loft-orbital-hiring/temperature-feed
+    ports:
+      - 1000:4000

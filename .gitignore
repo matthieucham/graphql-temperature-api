@@ -1,2 +1,14 @@
 # IDE config
 .vscode/
+
+# pyenv
+.python-version
+
+# dotenv
+.env
+
+# local db
+.db_data/
+
+# generated files
+*.pyc

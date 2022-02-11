@@ -8,7 +8,7 @@
 .env
 
 # local db
-.db_data/
+db.sqlite3
 
 # generated files
 *.pyc

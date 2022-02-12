@@ -1,2 +1,3 @@
 django-environ
 graphene_django
+websockets

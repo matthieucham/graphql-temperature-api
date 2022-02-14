@@ -12,3 +12,8 @@ db.sqlite3
 
 # generated files
 *.pyc
+__pycache__
+.pytest_cache
+
+# coverage
+.coverage

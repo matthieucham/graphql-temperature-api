@@ -1,5 +1,5 @@
 """Consume the temperatures feed."""
-from typing import Iterable
+from typing import Any, Dict, Iterable, List
 import websockets
 import asyncio
 import json
@@ -12,12 +12,36 @@ from backend.settings import FEED_URI
 from api.models import TemperatureModel
 
 
-def persist_batch(batch: Iterable[TemperatureModel]) -> None:
-    """Persist the batch in db."""
-    TemperatureModel.objects.bulk_create(batch)
+# process_reading is isolated from capture_data in order to ease its testing.
 
 
-async def capture_data(batch_size: int):
+def process_reading(
+    received: Dict[str, Any], current_batch: List[TemperatureModel], batch_size: int
+) -> List[TemperatureModel]:
+    """Process an incoming temperature reading: grow the batch and persist eventually.
+
+    Args:
+        received (Dict[str,Any]): received reading (json)
+        current_batch (List[TemperatureModel]): current batch of TemperatureModel waiting to be stored
+        batch_size (int): number of readings to accumulate in each batch.
+
+    Returns:
+        List[TemperatureModel]: the batch for the next call.
+    """
+    current_batch.append(
+        TemperatureModel(
+            timestamp=timezone.now(),
+            value=received["payload"]["data"]["temperature"],
+        )
+    )
+    if len(current_batch) >= batch_size:
+        TemperatureModel.objects.bulk_create(current_batch)
+        # initiate a new batch
+        return list()
+    return current_batch
+
+
+async def capture_data(batch_size: int):  # pragma: no cover
     """Read from the feed."""
     start = {"type": "start", "payload": {"query": "subscription { temperature }"}}
     batch = list()
@@ -27,18 +51,10 @@ async def capture_data(batch_size: int):
             data = await websocket.recv()
             received = json.loads(data)
             print(received)
-            batch.append(
-                TemperatureModel(
-                    timestamp=timezone.now(),
-                    value=received["payload"]["data"]["temperature"],
-                )
-            )
-            if len(batch) >= batch_size:
-                await sync_to_async(persist_batch)(batch)
-                batch = list()
+            batch = await sync_to_async(process_reading)(received, batch, batch_size)
 
 
-class Command(BaseCommand):
+class Command(BaseCommand):  # pragma: no cover
     """Custom command to consume the temperatures feed and store read values in db."""
 
     help = "Consume the temperatures feed and store read values in db"

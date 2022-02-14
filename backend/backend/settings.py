@@ -110,4 +110,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # URI of the temperature source feed
 
-FEED_URI = f"ws://{env('FEED_HOST')}/graphql"
+FEED_URI = f"ws://{env('FEED_HOST', default='localhost:1000')}/graphql"

@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import environ
 from pathlib import Path
 
+# Hack to workaround django 4 / django_graphene compatibility issue:
+import django
+from django.utils.encoding import force_str
+
+django.utils.encoding.force_text = force_str
+# End of hack
 
 env = environ.Env()
 env.read_env()
@@ -41,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "graphene_django",
     "api",
 ]
 

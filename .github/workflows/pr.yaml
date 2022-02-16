@@ -57,4 +57,5 @@ functional-check:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Functional tests with pytest
         run: |
+          cd backend/
           DJANGO_SECRET_KEY=fakekeyfortesting pytest --cache-clear api/tests/

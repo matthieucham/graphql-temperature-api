@@ -37,7 +37,7 @@ jobs:
           cd backend/
           DJANGO_SECRET_KEY=fakekeyfortesting pytest --cache-clear  --ignore api/tests/ --cov-config=.coveragerc --cov=api/ --cov-report term-missing --cov-fail-under 100
 
-functional-check:
+  functional-check:
 
     runs-on: ubuntu-latest
     strategy:

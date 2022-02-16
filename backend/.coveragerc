@@ -2,8 +2,10 @@
 omit = 
     *_test.py
     */migrations/*
+    */tests/*
 
 [report]
 omit = 
     *_test.py
     */migrations/*
+    */tests/*

@@ -1,4 +1,6 @@
 black
+django-stubs
 flake8
+mypy
 pytest-cov
 pytest-django

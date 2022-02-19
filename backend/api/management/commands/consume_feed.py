@@ -7,7 +7,7 @@ from django.utils import timezone
 from asgiref.sync import sync_to_async
 
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from backend.settings import FEED_URI
 from api.models import TemperatureModel
 
@@ -41,11 +41,11 @@ def process_reading(
     return current_batch
 
 
-async def capture_data(batch_size: int):  # pragma: no cover
+async def capture_data(batch_size: int) -> None:  # pragma: no cover
     """Read from the feed."""
     start = {"type": "start", "payload": {"query": "subscription { temperature }"}}
-    batch = list()
-    async with websockets.connect(FEED_URI, subprotocols=["graphql-ws"]) as websocket:
+    batch: List[TemperatureModel] = list()
+    async with websockets.connect(FEED_URI, subprotocols=["graphql-ws"]) as websocket:  # type: ignore
         await websocket.send(json.dumps(start))
         while True:
             data = await websocket.recv()
@@ -59,7 +59,7 @@ class Command(BaseCommand):  # pragma: no cover
 
     help = "Consume the temperatures feed and store read values in db"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         """Add a batch_size argument"""
         parser.add_argument(
             "batch_size",
@@ -69,7 +69,7 @@ class Command(BaseCommand):  # pragma: no cover
             default=10,
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: tuple, **options: int) -> None:
         """Consume the feed in an infinite loop and persist data by batches."""
         self.stdout.write(f"Launch consumption of temperature feed at {FEED_URI}")
 

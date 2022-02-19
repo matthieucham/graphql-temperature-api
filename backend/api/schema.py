@@ -1,5 +1,5 @@
 """GraphQL schema."""
-from typing import Any
+from typing import Any, Optional
 import graphene
 from graphene_django import DjangoObjectType
 from django.db.models import Min, Max
@@ -29,14 +29,14 @@ class Query(graphene.ObjectType):
         before=graphene.DateTime(required=False),
     )
 
-    def resolve_current_temperature(root, info: Any) -> TemperatureModel:
+    def resolve_current_temperature(root, info: Any) -> Optional[TemperatureModel]:
         """Return the last registered temperature in db."""
         return TemperatureModel.objects.order_by("-timestamp").first()
 
     def resolve_temperature_statistics(
         root, info: Any, after: datetime = None, before: datetime = None
     ) -> TemperatureStatisticsNode:
-        query = TemperatureModel.objects
+        query = TemperatureModel.objects.all()
         if after:
             query = query.filter(timestamp__gte=after)
         if before:

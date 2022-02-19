@@ -17,3 +17,6 @@ __pycache__
 
 # coverage
 .coverage
+
+# mypy
+.mypy_cache

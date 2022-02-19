@@ -33,6 +33,7 @@ def client_query(client):
 def mock_manager():
     """Mock the TemperatureModel db manager."""
     mock = MagicMock(spec=TemperatureModel.objects)
+    mock.all.return_value = mock
     # emulate required functions in order to return constant test data
     # current temperature
     mock.order_by.return_value = mock

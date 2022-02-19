@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest-django pytest-cov
+          pip install flake8 pytest-django pytest-cov mypy django-stubs
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with flake8
         run: |
@@ -32,10 +32,16 @@ jobs:
           flake8 backend/api/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude *_test.py
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 backend/api/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude *_test.py
+      - name: Type checking with mypy
+        run: |
+          cd backend
+          DJANGO_SECRET_KEY=fakekeyfortesting mypy api/
+          cd ..
       - name: Unit tests with pytest
         run: |
           cd backend/
           DJANGO_SECRET_KEY=fakekeyfortesting pytest --cache-clear  --ignore api/tests/ --cov-config=.coveragerc --cov=api/ --cov-report term-missing --cov-fail-under 100
+          cd ..
 
   functional-check:
 

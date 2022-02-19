@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+from typing import List
 import environ
 from pathlib import Path
 
@@ -16,7 +17,7 @@ from pathlib import Path
 import django
 from django.utils.encoding import force_str
 
-django.utils.encoding.force_text = force_str
+django.utils.encoding.force_text = force_str  # type: ignore
 # End of hack
 
 env = environ.Env()
@@ -35,7 +36,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: List[str] = []
 
 
 # Application definition

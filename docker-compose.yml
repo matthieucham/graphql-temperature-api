@@ -1,7 +1,31 @@
 version: '3'
 
+networks:
+  apinet:
+    driver: bridge
+
 services:
+  appli:
+    build:
+      context: .
+    volumes:
+      - type: bind
+        source: ./backend/.db_data
+        target: /app/.db_data
+    # command: tail -f /dev/null
+    command: gunicorn backend.wsgi --bind 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    environment:
+      - FEED_HOST=feed:1000
+    depends_on:
+      - feed
+    networks:
+      - apinet
+
   feed:
     image: registry.gitlab.com/loft-orbital-hiring/temperature-feed
     ports:
       - 1000:4000
+    networks:
+      - apinet

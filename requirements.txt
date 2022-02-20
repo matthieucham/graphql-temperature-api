@@ -1,3 +1,4 @@
 django-environ
 graphene_django
+gunicorn
 websockets

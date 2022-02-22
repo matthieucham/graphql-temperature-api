@@ -50,7 +50,6 @@ async def capture_data(batch_size: int) -> None:  # pragma: no cover
         while True:
             data = await websocket.recv()
             received = json.loads(data)
-            print(received)
             batch = await sync_to_async(process_reading)(received, batch, batch_size)
 
 

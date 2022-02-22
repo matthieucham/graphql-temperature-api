@@ -1,7 +1,34 @@
 version: '3'
 
 services:
+
   feed:
     image: registry.gitlab.com/loft-orbital-hiring/temperature-feed
     ports:
       - 1000:4000
+
+  appli:
+    build:
+      context: .
+    volumes:
+      - ./backend/.db_data:/app/.db_data
+      - static_volume:/app/staticfiles
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - 8000
+    environment:
+      - FEED_URI=ws://feed:4000/graphql
+    depends_on:
+      - feed
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - static_volume:/app/staticfiles
+    ports:
+      - 1337:80
+    depends_on:
+      - appli
+
+volumes:
+  static_volume:

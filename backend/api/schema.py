@@ -4,7 +4,8 @@ import graphene
 from graphene_django import DjangoObjectType
 from django.db.models import Min, Max
 from datetime import datetime
-from api.models import Temperature
+from api.models import Temperature, ReadConfig
+from django.core.exceptions import ValidationError
 
 
 class TemperatureType(DjangoObjectType):
@@ -47,4 +48,33 @@ class Query(graphene.ObjectType):
         )
 
 
-schema = graphene.Schema(query=Query)
+class ToggleFeedInput(graphene.InputObjectType):
+    """Input for ToggleFeed mutation."""
+
+    # An enum would be better suited here but I have to stick to the specs.
+    status = graphene.String(required=True)
+
+
+class ToggleFeed(graphene.Mutation):
+    """Mutation to toggle the feed reading (on/off)."""
+
+    class Arguments:
+        input = ToggleFeedInput(required=True)
+
+    status = graphene.String()
+
+    def mutate(root, info: Any, input: ToggleFeedInput) -> "ToggleFeed":
+        cleaninput = input.get("status", "").lower()
+        if cleaninput not in ("on", "off"):
+            raise ValidationError("status must be 'on' or 'off'.")
+        val, _ = ReadConfig.objects.update_or_create(
+            config_key="status", defaults={"config_value": cleaninput}
+        )
+        return ToggleFeed(status=val.config_value)
+
+
+class Mutation(graphene.ObjectType):
+    toggle_feed = ToggleFeed.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)

@@ -15,7 +15,7 @@ python manage.py collectstatic --noinput --clear
 
 # start feed consumer in background
 echo "Start consume_feed"
-python manage.py consume_feed 1 &
+python manage.py consume_feed &
 echo "consume_feed started in background"
 
 exec "$@"

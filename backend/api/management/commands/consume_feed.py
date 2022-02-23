@@ -9,33 +9,33 @@ from asgiref.sync import sync_to_async
 
 from django.core.management.base import BaseCommand
 from backend.settings import FEED_URI
-from api.models import TemperatureModel
+from api.models import Temperature
 
 
 # process_reading is isolated from capture_data in order to ease its testing.
 
 
 def process_reading(
-    received: Dict[str, Any], current_batch: List[TemperatureModel], batch_size: int
-) -> List[TemperatureModel]:
+    received: Dict[str, Any], current_batch: List[Temperature], batch_size: int
+) -> List[Temperature]:
     """Process an incoming temperature reading: grow the batch and persist eventually.
 
     Args:
         received (Dict[str,Any]): received reading (json)
-        current_batch (List[TemperatureModel]): current batch of TemperatureModel waiting to be stored
+        current_batch (List[Temperature]): current batch of Temperature waiting to be stored
         batch_size (int): number of readings to accumulate in each batch.
 
     Returns:
-        List[TemperatureModel]: the batch for the next call.
+        List[Temperature]: the batch for the next call.
     """
     current_batch.append(
-        TemperatureModel(
+        Temperature(
             timestamp=timezone.now(),
             value=received["payload"]["data"]["temperature"],
         )
     )
     if len(current_batch) >= batch_size:
-        TemperatureModel.objects.bulk_create(current_batch)
+        Temperature.objects.bulk_create(current_batch)
         # initiate a new batch
         return list()
     return current_batch
@@ -44,7 +44,7 @@ def process_reading(
 async def capture_data(batch_size: int) -> None:  # pragma: no cover
     """Read from the feed."""
     start = {"type": "start", "payload": {"query": "subscription { temperature }"}}
-    batch: List[TemperatureModel] = list()
+    batch: List[Temperature] = list()
     async with websockets.connect(FEED_URI, subprotocols=["graphql-ws"]) as websocket:  # type: ignore
         await websocket.send(json.dumps(start))
         while True:

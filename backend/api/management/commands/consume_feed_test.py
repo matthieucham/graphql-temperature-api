@@ -11,7 +11,7 @@ def test_process_reading_with_persist():
     received = {"payload": {"data": {"temperature": 20.5}}}
     # When
     with patch(
-        "api.management.commands.consume_feed.TemperatureModel.objects.bulk_create"
+        "api.management.commands.consume_feed.Temperature.objects.bulk_create"
     ) as mock_bulk_create:
         next_batch = process_reading(received, batch, batch_size)
         # Then
@@ -28,7 +28,7 @@ def test_process_reading_without_persist():
     received = {"payload": {"data": {"temperature": 20.5}}}
     # When
     with patch(
-        "api.management.commands.consume_feed.TemperatureModel.objects.bulk_create"
+        "api.management.commands.consume_feed.Temperature.objects.bulk_create"
     ) as mock_bulk_create:
         next_batch = process_reading(received, batch, batch_size)
         # Then

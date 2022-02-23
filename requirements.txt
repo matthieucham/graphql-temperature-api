@@ -1,4 +1,5 @@
 django-environ
 graphene_django
 gunicorn
+psycopg2
 websockets

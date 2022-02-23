@@ -5,11 +5,11 @@ import pytest
 from django.utils import timezone
 from graphene_django.utils.testing import graphql_query
 
-from api.models import TemperatureModel
+from api.models import Temperature
 
 
 SAMPLE = [
-    TemperatureModel(
+    Temperature(
         value=item.get("value"),
         timestamp=timezone.datetime.fromisoformat(item.get("timestamp")),
     )
@@ -40,4 +40,4 @@ def client_query(client):
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
-        TemperatureModel.objects.bulk_create(SAMPLE)
+        Temperature.objects.bulk_create(SAMPLE)

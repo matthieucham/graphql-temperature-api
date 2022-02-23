@@ -4,12 +4,12 @@ import graphene
 from graphene_django import DjangoObjectType
 from django.db.models import Min, Max
 from datetime import datetime
-from api.models import TemperatureModel
+from api.models import Temperature
 
 
 class TemperatureType(DjangoObjectType):
     class Meta:
-        model = TemperatureModel
+        model = Temperature
         fields = (
             "timestamp",
             "value",
@@ -29,14 +29,14 @@ class Query(graphene.ObjectType):
         before=graphene.DateTime(required=False),
     )
 
-    def resolve_current_temperature(root, info: Any) -> Optional[TemperatureModel]:
+    def resolve_current_temperature(root, info: Any) -> Optional[Temperature]:
         """Return the last registered temperature in db."""
-        return TemperatureModel.objects.order_by("-timestamp").first()
+        return Temperature.objects.order_by("-timestamp").first()
 
     def resolve_temperature_statistics(
         root, info: Any, after: datetime = None, before: datetime = None
     ) -> TemperatureStatisticsNode:
-        query = TemperatureModel.objects.all()
+        query = Temperature.objects.all()
         if after:
             query = query.filter(timestamp__gte=after)
         if before:

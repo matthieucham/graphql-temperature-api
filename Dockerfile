@@ -17,6 +17,7 @@ RUN echo -n \
     libpq5 \
     build-essential \
     libpq-dev \
+    netcat \
     && python -m pip install -r /requirements.txt \
     && rm -f /requirements.txt \
     && apt-get -y remove \

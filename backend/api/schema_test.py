@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 from graphene_django.utils.testing import graphql_query
 from django.utils import timezone
 
-from api.models import TemperatureModel
+from api.models import Temperature
 
 
 # Constant test data
-CURRENT_TEMPERATURE = TemperatureModel(
+CURRENT_TEMPERATURE = Temperature(
     value=Decimal(19.12345678),
     timestamp=timezone.datetime.fromisoformat("2022-02-15T12:00:00+00:00"),
 )
@@ -31,8 +31,8 @@ def client_query(client):
 
 @pytest.fixture
 def mock_manager():
-    """Mock the TemperatureModel db manager."""
-    mock = MagicMock(spec=TemperatureModel.objects)
+    """Mock the Temperature db manager."""
+    mock = MagicMock(spec=Temperature.objects)
     mock.all.return_value = mock
     # emulate required functions in order to return constant test data
     # current temperature
@@ -46,7 +46,7 @@ def mock_manager():
 
 def test_current_temperature(client_query, mock_manager):
     with patch(
-        "api.schema.TemperatureModel.objects",
+        "api.schema.Temperature.objects",
         mock_manager,
     ):
         response = client_query(
@@ -86,7 +86,7 @@ def test_current_temperature(client_query, mock_manager):
 )
 def test_temperature_statistics(client_query, mock_manager, after, before):
     with patch(
-        "api.schema.TemperatureModel.objects",
+        "api.schema.Temperature.objects",
         mock_manager,
     ):
         response = client_query(

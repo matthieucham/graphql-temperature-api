@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class TemperatureModel(models.Model):
+class Temperature(models.Model):
     """Model for temperature readings."""
 
     # timestamp of the reading, set by the consumer at consume time.

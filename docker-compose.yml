@@ -7,18 +7,32 @@ services:
     ports:
       - 1000:4000
 
+  database:
+    image: postgres:13.0-alpine
+    expose:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=graphql_temperature_user
+      - POSTGRES_PASSWORD=graphql_temperature_password
+      - POSTGRES_DB=graphql_temperature
+
   appli:
     build:
       context: .
     volumes:
-      - ./backend/.db_data:/app/.db_data
       - static_volume:/app/staticfiles
     command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
     expose:
       - 8000
     environment:
       - FEED_URI=ws://feed:4000/graphql
+      - DATABASE=postgres
+      - SQL_HOST=database
+      - SQL_PORT=5432
     depends_on:
+      - database
       - feed
 
   nginx:
@@ -32,3 +46,4 @@ services:
 
 volumes:
   static_volume:
+  postgres_data:

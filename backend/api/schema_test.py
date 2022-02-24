@@ -1,12 +1,13 @@
 """Unit tests for schema.py"""
 from decimal import Decimal
 import json
+from django.forms import ValidationError
 import pytest
 from unittest.mock import MagicMock, patch
 from graphene_django.utils.testing import graphql_query
 from django.utils import timezone
 
-from api.models import Temperature
+from api.models import Temperature, ReadConfig
 
 
 # Constant test data
@@ -15,6 +16,8 @@ CURRENT_TEMPERATURE = Temperature(
     timestamp=timezone.datetime.fromisoformat("2022-02-15T12:00:00+00:00"),
 )
 STATS_OUTPUT = {"value__min": Decimal(-18.44367841), "value__max": Decimal(32.08444412)}
+
+STATUS_CONFIG = ReadConfig(config_key="status", config_value="on")
 
 # Pytest fixtures
 @pytest.fixture
@@ -41,6 +44,21 @@ def mock_manager():
     # statistics
     mock.filter.return_value = mock
     mock.aggregate.return_value = STATS_OUTPUT
+    yield mock
+
+
+@pytest.fixture
+def mock_config_manager():
+    """Mock the ReadConfig db manager."""
+    mock = MagicMock(spec=ReadConfig.objects)
+    mock.update_or_create.return_value = STATUS_CONFIG, False
+    yield mock
+
+
+@pytest.fixture
+def mock_cache():
+    """Mock the cache."""
+    mock = MagicMock()
     yield mock
 
 
@@ -111,3 +129,49 @@ def test_temperature_statistics(client_query, mock_manager, after, before):
         assert content["data"]["temperatureStatistics"]["max"] == str(
             STATS_OUTPUT["value__max"]
         )
+
+
+def test_toggle_feed_on(client_query, mock_config_manager, mock_cache):
+    """Test that the db and the cache are updated."""
+    with patch(
+        "api.schema.ReadConfig.objects",
+        mock_config_manager,
+    ) as config_manager, patch("api.schema.cache", mock_cache) as cache:
+        response = client_query(
+            """
+            mutation {
+                toggleFeed(input: {status: "on"}) {
+                    status
+                }
+            }
+            """
+        )
+        content = json.loads(response.content)
+        assert "errors" not in content
+        assert "status" in content["data"]["toggleFeed"]
+        assert content["data"]["toggleFeed"]["status"] == "on"
+        config_manager.update_or_create.assert_called_once_with(
+            config_key="status", defaults={"config_value": "on"}
+        )
+        cache.set.assert_called_once_with("status", "on")
+
+
+def test_toggle_feed_bad_input(client_query, mock_config_manager, mock_cache):
+    """Test that an error is returned."""
+    with patch(
+        "api.schema.ReadConfig.objects",
+        mock_config_manager,
+    ) as config_manager, patch("api.schema.cache", mock_cache) as cache:
+        response = client_query(
+            """
+            mutation {
+                toggleFeed(input: {status: "ooof"}) {
+                    status
+                }
+            }
+            """
+        )
+        content = json.loads(response.content)
+        assert "errors" in content
+        config_manager.update_or_create.assert_not_called()
+        cache.set.assert_not_called()

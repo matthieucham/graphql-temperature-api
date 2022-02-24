@@ -131,7 +131,7 @@ Sample response:
   }
 }
 ```
-Send `input: {status: "on"}` to turn feed consumption off. When it's turned off, emitted temperature readings are not persisted. When it's turned on again, missed readings are **not** backfilled.
+Send `input: {status: "off"}` to turn feed consumption off. When it's turned off, emitted temperature readings are not persisted. When it's turned on again, missed readings are **not** backfilled.
 
 
 ## CI tooling

@@ -1,0 +1,22 @@
+# IDE config
+.vscode/
+
+# pyenv
+.python-version
+
+# dotenv
+.env
+
+# local db
+db.sqlite3
+
+# generated files
+*.pyc
+__pycache__
+.pytest_cache
+
+# coverage
+.coverage
+
+# mypy
+.mypy_cache

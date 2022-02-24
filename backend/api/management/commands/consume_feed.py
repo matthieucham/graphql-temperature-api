@@ -8,49 +8,37 @@ from asgiref.sync import sync_to_async
 
 
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
+
 from backend.settings import FEED_URI
-from api.models import Temperature
+from api.models import Temperature, ReadConfig
 
 
 # process_reading is isolated from capture_data in order to ease its testing.
 
 
-def process_reading(
-    received: Dict[str, Any], current_batch: List[Temperature], batch_size: int
-) -> List[Temperature]:
-    """Process an incoming temperature reading: grow the batch and persist eventually.
+def process_reading(received: Dict[str, Any]) -> None:
+    """Process an incoming temperature reading and persist.
 
     Args:
         received (Dict[str,Any]): received reading (json)
-        current_batch (List[Temperature]): current batch of Temperature waiting to be stored
-        batch_size (int): number of readings to accumulate in each batch.
-
-    Returns:
-        List[Temperature]: the batch for the next call.
     """
-    current_batch.append(
-        Temperature(
-            timestamp=timezone.now(),
-            value=received["payload"]["data"]["temperature"],
+    # Check if reading is on before persisting
+    if cache.get("status", ReadConfig.objects.get(pk="status").config_value) == "on":
+        Temperature.objects.create(
+            timestamp=timezone.now(), value=received["payload"]["data"]["temperature"]
         )
-    )
-    if len(current_batch) >= batch_size:
-        Temperature.objects.bulk_create(current_batch)
-        # initiate a new batch
-        return list()
-    return current_batch
 
 
-async def capture_data(batch_size: int) -> None:  # pragma: no cover
+async def capture_data() -> None:  # pragma: no cover
     """Read from the feed."""
     start = {"type": "start", "payload": {"query": "subscription { temperature }"}}
-    batch: List[Temperature] = list()
     async with websockets.connect(FEED_URI, subprotocols=["graphql-ws"]) as websocket:  # type: ignore
         await websocket.send(json.dumps(start))
         while True:
             data = await websocket.recv()
             received = json.loads(data)
-            batch = await sync_to_async(process_reading)(received, batch, batch_size)
+            await sync_to_async(process_reading)(received)
 
 
 class Command(BaseCommand):  # pragma: no cover
@@ -58,18 +46,13 @@ class Command(BaseCommand):  # pragma: no cover
 
     help = "Consume the temperatures feed and store read values in db"
 
-    def add_arguments(self, parser: Any) -> None:
-        """Add a batch_size argument"""
-        parser.add_argument(
-            "batch_size",
-            nargs="?",
-            type=int,
-            help="Number of values in batches of data to persist.",
-            default=10,
-        )
-
     def handle(self, *args: tuple, **options: int) -> None:
-        """Consume the feed in an infinite loop and persist data by batches."""
+        """Consume the feed in an infinite loop and persist data in db."""
         self.stdout.write(f"Launch consumption of temperature feed at {FEED_URI}")
-
-        asyncio.run(capture_data(batch_size=options["batch_size"]))
+        # setup initial reading status
+        ReadConfig.objects.update_or_create(
+            config_key="status", defaults={"config_value": "on"}
+        )
+        # set the cache
+        cache.set("status", "on")
+        asyncio.run(capture_data())

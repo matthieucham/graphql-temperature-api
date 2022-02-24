@@ -62,3 +62,39 @@ def test_temperature_statistics(client_query, after, before, expectmin, expectma
     assert "max" in content["data"]["temperatureStatistics"]
     assert Decimal(content["data"]["temperatureStatistics"]["min"]) == expectmin
     assert Decimal(content["data"]["temperatureStatistics"]["max"]) == expectmax
+
+
+@pytest.mark.parametrize("statusvalue", ["on", "ON", "off", "OFF"])
+@pytest.mark.django_db
+def test_toggle_status(client_query, statusvalue):
+    response = client_query(
+        """
+        mutation {
+            toggleFeed(input: {status: "%s"}) {
+                status
+            }
+        }
+        """
+        % statusvalue
+    )
+    content = json.loads(response.content)
+    assert "errors" not in content
+    assert "status" in content["data"]["toggleFeed"]
+    assert content["data"]["toggleFeed"]["status"] == statusvalue.lower()
+
+
+@pytest.mark.parametrize("badstatusvalue", ["ooof", "none", "O", "1"])
+@pytest.mark.django_db
+def test_toggle_badstatus(client_query, badstatusvalue):
+    response = client_query(
+        """
+        mutation {
+            toggleFeed(input: {status: "%s"}) {
+                status
+            }
+        }
+        """
+        % badstatusvalue
+    )
+    content = json.loads(response.content)
+    assert "errors" in content

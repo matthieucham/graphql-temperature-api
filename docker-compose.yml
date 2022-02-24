@@ -27,8 +27,13 @@ services:
     expose:
       - 8000
     environment:
+      - DJANGO_SECRET_KEY=sampledjangosecretkey
       - FEED_URI=ws://feed:4000/graphql
       - DATABASE=postgres
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=graphql_temperature
+      - SQL_USER=graphql_temperature_user
+      - SQL_PASSWORD=graphql_temperature_password
       - SQL_HOST=database
       - SQL_PORT=5432
     depends_on:

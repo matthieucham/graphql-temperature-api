@@ -96,6 +96,16 @@ DATABASES = {
     }
 }
 
+# Caching
+# In the real world, we would setup a true cache backend (Redis, Memcached)
+# But not LocMemCache (default) which is per-process, albeit we need cross-process caching.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        "TIMEOUT": None,
+    }
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 

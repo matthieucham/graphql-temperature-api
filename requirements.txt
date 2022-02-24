@@ -1,5 +1,6 @@
-django-environ
-graphene_django
-gunicorn
-psycopg2
-websockets
+Django>=4.0
+django-environ>=0.8
+graphene_django>=2.15
+gunicorn>=20.1
+psycopg2>=2.9
+websockets>=10.1

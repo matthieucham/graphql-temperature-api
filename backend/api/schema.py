@@ -6,6 +6,7 @@ from django.db.models import Min, Max
 from datetime import datetime
 from api.models import Temperature, ReadConfig
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
 
 class TemperatureType(DjangoObjectType):
@@ -67,9 +68,12 @@ class ToggleFeed(graphene.Mutation):
         cleaninput = input.get("status", "").lower()
         if cleaninput not in ("on", "off"):
             raise ValidationError("status must be 'on' or 'off'.")
+        # update the db
         val, _ = ReadConfig.objects.update_or_create(
             config_key="status", defaults={"config_value": cleaninput}
         )
+        # update the cache
+        cache.set("status", cleaninput)
         return ToggleFeed(status=val.config_value)
 
 

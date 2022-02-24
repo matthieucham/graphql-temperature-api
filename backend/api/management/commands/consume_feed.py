@@ -8,6 +8,8 @@ from asgiref.sync import sync_to_async
 
 
 from django.core.management.base import BaseCommand
+from django.core.cache import cache
+
 from backend.settings import FEED_URI
 from api.models import Temperature, ReadConfig
 
@@ -22,7 +24,7 @@ def process_reading(received: Dict[str, Any]) -> None:
         received (Dict[str,Any]): received reading (json)
     """
     # Check if reading is on before persisting
-    if ReadConfig.objects.get(pk="status").config_value == "on":
+    if cache.get("status", ReadConfig.objects.get(pk="status").config_value) == "on":
         Temperature.objects.create(
             timestamp=timezone.now(), value=received["payload"]["data"]["temperature"]
         )
@@ -51,4 +53,6 @@ class Command(BaseCommand):  # pragma: no cover
         ReadConfig.objects.update_or_create(
             config_key="status", defaults={"config_value": "on"}
         )
+        # set the cache
+        cache.set("status", "on")
         asyncio.run(capture_data())
